@@ -178,7 +178,7 @@ strings -a -t x /lib/i386-linux-gnu/libc.so.6 | grep "/bin/sh"  # → 0x15b82b
 I then computed my three target addresses by adding these offsets to the
 `ldd`-reported libc base (`0xb7d8e000`).
 
-> [!NOTE] Why I searched inside libc instead of using an env variable
+> [!NOTE]
 >
 > The textbook suggests placing `"/bin/sh"` in an environment variable
 > (`MYSHELL=/bin/sh`) and finding its address with a helper program
