@@ -300,4 +300,5 @@ The following models were used as assistants in this experiment:
 - **GLM 5.1** for coding assistance.
 - **Deepseek V4 Flash** for writing assistance.
 
-These are both Free and Open Source models licensed under the MIT License.
+These are both Free and Open Source models licensed under the
+[MIT License](https://mit-license.org/).
