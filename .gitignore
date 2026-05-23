@@ -1,0 +1,5 @@
+.devenv*
+.envrc
+devenv.lock
+*.o
+badfile
