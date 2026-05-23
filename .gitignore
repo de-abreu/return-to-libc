@@ -2,4 +2,5 @@
 .envrc
 devenv.lock
 *.o
+*.pdf
 badfile

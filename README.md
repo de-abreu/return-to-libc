@@ -10,8 +10,6 @@ hijacking the return address to jump into existing libc functions (like
 taken to exploit a buffer overflow in a Set-UID root program and obtain a root
 shell.
 
----
-
 ## Step 0a: Host Environment Setup
 
 The host machine runs **NixOS** with **VirtualBox** enabled as a host via:
@@ -44,8 +42,6 @@ A **shared folder** (`return-to-libc/shared/`) was set up via the VirtualBox GUI
 to transfer files between the host and the VM. It is mounted read-only inside
 the guest at `/media/sf_return-to-libc`. C source files (`retlib.c`,
 `exploit.c`) are written on the host and compiled inside the VM after copying.
-
----
 
 ## Step 0b: Lab Setup — Disabling OS Countermeasures
 
@@ -84,24 +80,20 @@ Which returned `138` and was rounded to `128`, the nearest exponent of `2`. I
 proceeded to compile `retlib.c` setting its `-DBUF_SIZE` flag:
 
 ```bash
-gcc -DBUF_SIZE=128 -fno-stack-protector -z noexecstack -o retlib /media/sf_return-to-libc/retlib.c
+gcc -DBUF_SIZE=128 -fno-stack-protector -z noexecstack \
+-o retlib /media/sf_return-to-libc/retlib.c
 sudo chown root retlib
 sudo chmod 4755 retlib
 ```
 
----
-
 ## Step 1: Finding libc Function Addresses (Task 1)
 
 I needed the runtime addresses of `system()`, `exit()`, and `"/bin/sh"` inside
-the target process.
-
-**Approach taken:** Used GDB without PEDA (`gdb -nx -q`) to avoid plugin
-interference:
+the target process. My inital approach was to search for those using GDB:
 
 ```bash
 touch badfile                          # retlib needs this file to exist
-gdb -nx -q ./retlib
+gdb -q ./retlib
 (gdb) b main
 (gdb) run
 (gdb) p system                         # address of system()
@@ -115,13 +107,11 @@ gdb -nx -q ./retlib
 - `exit()`: `0xb7e369d0`
 - `"/bin/sh"`: `0xb7f6382b`
 
-> [!IMPORTANT]
+> [!NOTE]
 >
 > As I came to discover, GDB adds its own environment variables, shifting the
 > libc base by ~0x9e000 compared to standalone execution. This is the reason I
 > tried using `ldd` later for this same purpose.
-
----
 
 ## Step 2: Understanding the Stack Layout (Disassembly)
 
@@ -148,8 +138,6 @@ This reveals the stack layout:
 | **140–143**        | **return address** ← overwritten with `system()` |
 | **144–147**        | **system()'s return address** ← set to `exit()`  |
 | **148–151**        | **system()'s argument** ← pointer to `"/bin/sh"` |
-
----
 
 ## Step 3: Building the Exploit (Task 3)
 
@@ -190,7 +178,7 @@ strings -a -t x /lib/i386-linux-gnu/libc.so.6 | grep "/bin/sh"  # → 0x15b82b
 I then computed my three target addresses by adding these offsets to the
 `ldd`-reported libc base (`0xb7d8e000`).
 
-> [!IMPORTANT] Why I searched inside libc instead of using an env variable
+> [!NOTE] Why I searched inside libc instead of using an env variable
 >
 > The textbook suggests placing `"/bin/sh"` in an environment variable
 > (`MYSHELL=/bin/sh`) and finding its address with a helper program
@@ -269,8 +257,6 @@ Set a breakpoint at `bof+40` (the `ret` instruction) and inspected the stack:
 
 All three addresses confirmed at the correct positions on the stack.
 
----
-
 ## Results
 
 Running `./retlib` with the crafted `badfile` spawns a root shell. The attack
@@ -280,8 +266,6 @@ succeeds because:
 2. The overflow overwrites the return address with `system()`
 3. When `bof()` executes `ret`, it jumps to `system("/bin/sh")`
 4. Since `retlib` is Set-UID root, the shell runs with root privileges
-
----
 
 ## Key Lessons
 
@@ -300,8 +284,6 @@ succeeds because:
    padding between `buffer` and the saved EBP — without checking, my offset
    calculations would have been wrong.
 
----
-
 ## Files
 
 - `devenv.nix` / `devenv.yaml` / `devenv.lock` — devenv environment
@@ -311,7 +293,7 @@ succeeds because:
   - `shared/exploit.c` — C exploit program
 - `README.md` — This report
 
-## Use of Artificial Inteligence
+## Use of Large Language Models
 
 The following models were used as assistants in this experiment:
 
