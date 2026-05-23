@@ -84,7 +84,7 @@ Which returned `138` and was rounded to `128`, the nearest exponent of `2`. I
 proceeded to compile `retlib.c` setting its `-DBUF_SIZE` flag:
 
 ```bash
-gcc -DBUF_SIZE=128 -fno-stack-protector -z noexecstack -o retlib retlib.c
+gcc -DBUF_SIZE=128 -fno-stack-protector -z noexecstack -o retlib /media/sf_return-to-libc/retlib.c
 sudo chown root retlib
 sudo chmod 4755 retlib
 ```
@@ -118,8 +118,8 @@ gdb -nx -q ./retlib
 > [!IMPORTANT]
 >
 > As I came to discover, GDB adds its own environment variables, shifting the
-> libc base by ~0x9e000 compared to standalone execution. This is the reason
-> I tried using `ldd` later for this same purpose.
+> libc base by ~0x9e000 compared to standalone execution. This is the reason I
+> tried using `ldd` later for this same purpose.
 
 ---
 
